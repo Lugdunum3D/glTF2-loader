@@ -1,3 +1,5 @@
+#include <iostream>
+#include <fstream>
 #include <string>
 #include "ext/json.hpp"
 #include "glTF2.hpp"
@@ -14,6 +16,10 @@ static void loadNodes(Asset& asset, nlohmann::json& j);
 static void loadBuffers(Asset& asset, nlohmann::json& j);
 static void loadAccessors(Asset& asset, nlohmann::json& j);
 static void loadBufferViews(Asset& asset, nlohmann::json& j);
+
+static void loadBufferData(Asset& asset, Buffer& buffer);
+
+static std::string pathAppend(const std::string& p1, const std::string& p2);
 
 static void loadAsset(Asset& asset, nlohmann::json& j) {
     if (j.find("asset") == j.end()) {
@@ -95,7 +101,7 @@ static void loadScenes(Asset& asset, nlohmann::json& j) {
         if (scenes[i].find("nodes") != scenes[i].end()) {
             auto& nodes = scenes[i]["nodes"];
             if (!nodes.is_array()) {
-                throw std::runtime_error("Misformatted file: 'scenes[i][nodes]' is not an array");
+                throw MisformattedExceptionNotArray("scenes[i][nodes]");
             }
 
             asset.scenes[i].nodes.resize(nodes.size());
@@ -291,6 +297,8 @@ static void loadBuffers(Asset& asset, nlohmann::json& j) {
         if (buffers[i].find("uri") != buffers[i].end()) {
             asset.buffers[i].uri = buffers[i]["uri"];
         }
+
+        loadBufferData(asset, asset.buffers[i]);
     }
 }
 
@@ -464,10 +472,49 @@ static void loadBufferViews(Asset& asset, nlohmann::json& j) {
     }
 }
 
+static void loadBufferData(Asset& asset, Buffer& buffer) {
+    if (!buffer.uri.size() && buffer.byteLength > 0) {
+        throw MisformattedException("buffers[i]", "is not empty but has no uri");
+    }
+
+    buffer.data = new char[buffer.byteLength];
+    // TODO: load base64 uri
+    std::ifstream fileData(pathAppend(asset.dirName, buffer.uri), std::ios::binary);
+    if (!fileData.good()) {
+        throw MisformattedException("buffers[i].uri", "has not a valid uri (failed to open file)");
+    }
+    fileData.read(buffer.data, buffer.byteLength);
+    fileData.close();
+}
+
+static std::string pathAppend(const std::string& p1, const std::string& p2) {
+    char sep = '/';
+    std::string tmp = p1;
+
+    if (p1[p1.length()] != sep) { // Need to add a
+        tmp += sep;                // path separator
+        return tmp + p2;
+    } else {
+        return p1 + p2;
+    }
+}
+
+static std::string getDirectoryName(const std::string& path) {
+    std::size_t found;
+
+    found = path.find_last_of("/");
+    if (found == std::string::npos) {
+        return "";
+    }
+
+    return path.substr(0, found);
+}
+
 Asset load(std::string fileName) {
     Asset asset{};
 
     std::ifstream file(fileName);
+    asset.dirName = getDirectoryName(fileName);
 
     // TODO: Check the extension (.gltf / .glb)
 

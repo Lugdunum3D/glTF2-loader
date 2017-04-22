@@ -51,6 +51,8 @@ struct Buffer {
     std::string uri;
     uint32_t byteLength = 0;
 
+    char* data = nullptr;
+
     // content
 
     // extensions / extras
@@ -166,6 +168,8 @@ struct Asset {
     // std::vector<Texture> textures;
 
     // extensions / extras
+
+    std::string dirName;
 
     Scene* getDefaultScene() const;
 };
