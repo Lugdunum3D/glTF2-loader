@@ -1,4 +1,4 @@
-#include "glTF2.hpp"
+#include <gltf2/glTF2.hpp>
 #include <gtest/gtest.h>
 
 using namespace ::testing;

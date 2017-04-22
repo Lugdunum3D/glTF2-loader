@@ -1,9 +1,9 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "ext/json.hpp"
-#include "glTF2.hpp"
-#include "Exceptions.hpp"
+#include <ext/json.hpp>
+#include <gltf2/glTF2.hpp>
+#include <gltf2/Exceptions.hpp>
 
 #include <fstream>
 

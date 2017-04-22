@@ -53,7 +53,7 @@ set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "CMake")
 set(target "gltf2-loader")
 
 set(SRCS
-  "src/glTF2.cpp"
+    "src/gltf2/glTF2.cpp"
 )
 
 set(INCS
