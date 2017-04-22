@@ -9,75 +9,75 @@
 
 namespace gltf2 {
 
-static void loadAsset(Asset& asset, nlohmann::json& j);
-static void loadScenes(Asset& asset, nlohmann::json& j);
-static void loadMeshes(Asset& asset, nlohmann::json& j);
-static void loadNodes(Asset& asset, nlohmann::json& j);
-static void loadBuffers(Asset& asset, nlohmann::json& j);
-static void loadAccessors(Asset& asset, nlohmann::json& j);
-static void loadBufferViews(Asset& asset, nlohmann::json& j);
+static void loadAsset(Asset& asset, nlohmann::json& json);
+static void loadScenes(Asset& asset, nlohmann::json& json);
+static void loadMeshes(Asset& asset, nlohmann::json& json);
+static void loadNodes(Asset& asset, nlohmann::json& json);
+static void loadBuffers(Asset& asset, nlohmann::json& json);
+static void loadAccessors(Asset& asset, nlohmann::json& json);
+static void loadBufferViews(Asset& asset, nlohmann::json& json);
 
 static void loadBufferData(Asset& asset, Buffer& buffer);
 
 static std::string pathAppend(const std::string& p1, const std::string& p2);
 
-static void loadAsset(Asset& asset, nlohmann::json& j) {
-    if (j.find("asset") == j.end()) {
+static void loadAsset(Asset& asset, nlohmann::json& json) {
+    if (json.find("asset") == json.end()) {
         throw MisformattedExceptionIsRequired("asset");
     }
 
     // version
-    if (j["asset"].find("version") == j["asset"].end()) {
+    if (json["asset"].find("version") == json["asset"].end()) {
         throw MisformattedExceptionIsRequired("asset[version]");
     }
-    if (!j["asset"]["version"].is_string()) {
+    if (!json["asset"]["version"].is_string()) {
         throw MisformattedExceptionNotString("version");
     }
 
-    asset.metadata.version = j["asset"]["version"].get<std::string>();
+    asset.metadata.version = json["asset"]["version"].get<std::string>();
 
     // copyright
-    if (j["asset"].find("copyright") != j["asset"].end()) {
-        if (!j["asset"]["copyright"].is_string()) {
+    if (json["asset"].find("copyright") != json["asset"].end()) {
+        if (!json["asset"]["copyright"].is_string()) {
             throw MisformattedExceptionNotString("copyright");
         }
 
-        asset.metadata.copyright = j["asset"]["copyright"].get<std::string>();
+        asset.metadata.copyright = json["asset"]["copyright"].get<std::string>();
     }
 
     // generator
-    if (j["asset"].find("generator") != j["asset"].end()) {
-        if (!j["asset"]["generator"].is_string()) {
+    if (json["asset"].find("generator") != json["asset"].end()) {
+        if (!json["asset"]["generator"].is_string()) {
             throw MisformattedExceptionNotString("generator");
         }
 
-        asset.metadata.generator = j["asset"]["generator"].get<std::string>();
+        asset.metadata.generator = json["asset"]["generator"].get<std::string>();
     }
 
     // minVersion
-    if (j["asset"].find("minVersion") != j["asset"].end()) {
-        if (!j["asset"]["minVersion"].is_string()) {
+    if (json["asset"].find("minVersion") != json["asset"].end()) {
+        if (!json["asset"]["minVersion"].is_string()) {
             throw MisformattedExceptionNotString("minVersion");
         }
 
-        asset.metadata.minVersion = j["asset"]["minVersion"].get<std::string>();
+        asset.metadata.minVersion = json["asset"]["minVersion"].get<std::string>();
     }
 }
 
-static void loadScenes(Asset& asset, nlohmann::json& j) {
-    if (j.find("scene") != j.end()) {
-        if (!j["scene"].is_number()) {
+static void loadScenes(Asset& asset, nlohmann::json& json) {
+    if (json.find("scene") != json.end()) {
+        if (!json["scene"].is_number()) {
             throw MisformattedExceptionNotNumber("scene");
         }
 
-        asset.scene = j["scene"].get<int32_t>();
+        asset.scene = json["scene"].get<int32_t>();
     }
 
-    if (j.find("scenes") == j.end()) {
+    if (json.find("scenes") == json.end()) {
         return;
     }
 
-    auto& scenes = j["scenes"];
+    auto& scenes = json["scenes"];
     if (!scenes.is_array()) {
         throw MisformattedExceptionNotArray("scenes");
     }
@@ -105,19 +105,19 @@ static void loadScenes(Asset& asset, nlohmann::json& j) {
             }
 
             asset.scenes[i].nodes.resize(nodes.size());
-            for (uint32_t j = 0; j < nodes.size(); j++) {
+            for (uint32_t j = 0; j < nodes.size(); ++j) {
                 asset.scenes[i].nodes[j] = nodes[j].get<uint32_t>();
             }
         }
     }
 }
 
-static void loadMeshes(Asset& asset, nlohmann::json& j) {
-    if (j.find("meshes") == j.end()) {
+static void loadMeshes(Asset& asset, nlohmann::json& json) {
+    if (json.find("meshes") == json.end()) {
         return;
     }
 
-    auto& meshes = j["meshes"];
+    auto& meshes = json["meshes"];
 
     if (!meshes.is_array()) {
         throw MisformattedExceptionNotArray("meshes");
@@ -194,12 +194,12 @@ static void loadMeshes(Asset& asset, nlohmann::json& j) {
     }
 }
 
-static void loadNodes(Asset& asset, nlohmann::json& j) {
-    if (j.find("nodes") == j.end()) {
+static void loadNodes(Asset& asset, nlohmann::json& json) {
+    if (json.find("nodes") == json.end()) {
         return;
     }
 
-    auto& nodes = j["nodes"];
+    auto& nodes = json["nodes"];
     if (!nodes.is_array()) {
         throw MisformattedExceptionNotArray("nodes");
     }
@@ -264,12 +264,12 @@ static void loadNodes(Asset& asset, nlohmann::json& j) {
     }
 }
 
-static void loadBuffers(Asset& asset, nlohmann::json& j) {
-    if (j.find("buffers") == j.end()) {
+static void loadBuffers(Asset& asset, nlohmann::json& json) {
+    if (json.find("buffers") == json.end()) {
         return;
     }
 
-    auto& buffers = j["buffers"];
+    auto& buffers = json["buffers"];
     if (!buffers.is_array()) {
         throw MisformattedExceptionNotArray("buffers");
     }
@@ -302,12 +302,12 @@ static void loadBuffers(Asset& asset, nlohmann::json& j) {
     }
 }
 
-static void loadAccessors(Asset& asset, nlohmann::json& j) {
-    if (j.find("accessors") == j.end()) {
+static void loadAccessors(Asset& asset, nlohmann::json& json) {
+    if (json.find("accessors") == json.end()) {
         return;
     }
 
-    auto& accessors = j["accessors"];
+    auto& accessors = json["accessors"];
 
     if (!accessors.is_array()) {
         throw MisformattedExceptionNotArray("accessors");
@@ -402,12 +402,12 @@ static void loadAccessors(Asset& asset, nlohmann::json& j) {
     }
 }
 
-static void loadBufferViews(Asset& asset, nlohmann::json& j) {
-    if (j.find("bufferViews") == j.end()) {
+static void loadBufferViews(Asset& asset, nlohmann::json& json) {
+    if (json.find("bufferViews") == json.end()) {
         return;
     }
 
-    auto& bufferViews = j["bufferViews"];
+    auto& bufferViews = json["bufferViews"];
     if (!bufferViews.is_array()) {
         throw MisformattedExceptionNotArray("bufferViews");
     }
@@ -518,17 +518,17 @@ Asset load(std::string fileName) {
 
     // TODO: Check the extension (.gltf / .glb)
 
-    nlohmann::json j;
+    nlohmann::json json;
 
-    file >> j;
+    file >> json;
 
-    loadAsset(asset, j);
-    loadScenes(asset, j);
-    loadMeshes(asset, j);
-    loadNodes(asset, j);
-    loadBuffers(asset, j);
-    loadBufferViews(asset, j);
-    loadAccessors(asset, j);
+    loadAsset(asset, json);
+    loadScenes(asset, json);
+    loadMeshes(asset, json);
+    loadNodes(asset, json);
+    loadBuffers(asset, json);
+    loadBufferViews(asset, json);
+    loadAccessors(asset, json);
 
     return asset;
 }
