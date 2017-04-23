@@ -62,6 +62,21 @@ set(INCS
 
 add_library(${target} STATIC ${SRCS} ${INCS})
 
+# setup the install of headers
+install(DIRECTORY include
+        DESTINATION .
+        COMPONENT devel
+        FILES_MATCHING PATTERN "*.hpp" PATTERN "*.inl" PATTERN "*.h" PATTERN "*.cc"
+)
+
+# setup the install of the library
+install(TARGETS ${target}
+        RUNTIME DESTINATION bin COMPONENT bin
+        LIBRARY DESTINATION lib COMPONENT bin
+        ARCHIVE DESTINATION lib COMPONENT devel
+        FRAMEWORK DESTINATION ${CMAKE_INSTALL_FRAMEWORK_PREFIX} COMPONENT bin
+)
+
 # c++14 on android (CMAKE_CXX_STANDARD doesn't work with the Android Toolchain)
 if (ANDROID)
     target_compile_options(${target} PUBLIC -std=c++14)
