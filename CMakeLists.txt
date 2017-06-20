@@ -62,6 +62,7 @@ set(INCS
 
 add_library(${target} STATIC ${SRCS} ${INCS})
 set_target_properties(${target} PROPERTIES DEBUG_POSTFIX -d)
+set_target_properties(${target} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # setup the install of headers
 install(DIRECTORY include
