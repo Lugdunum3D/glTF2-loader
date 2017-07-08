@@ -233,7 +233,7 @@ static void loadNodes(Asset& asset, nlohmann::json& json) {
 
             asset.nodes[i].children.resize(children.size());
             for (uint32_t j = 0; j < children.size(); ++j) {
-                asset.nodes[i].children[j] = children.get<uint32_t>();
+                asset.nodes[i].children[j] = children[j].get<uint32_t>();
             }
         }
 
