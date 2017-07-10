@@ -16,10 +16,10 @@ static void loadNodes(Asset& asset, nlohmann::json& json);
 static void loadBuffers(Asset& asset, nlohmann::json& json);
 static void loadAccessors(Asset& asset, nlohmann::json& json);
 static void loadBufferViews(Asset& asset, nlohmann::json& json);
-
 static void loadBufferData(Asset& asset, Buffer& buffer);
-
 static std::string pathAppend(const std::string& p1, const std::string& p2);
+static void loadMaterials(Asset& asset, nlohmann::json& json);
+static void loadTextureInfo(Material::Texture& texture, nlohmann::json& json);
 
 static void loadAsset(Asset& asset, nlohmann::json& json) {
     if (json.find("asset") == json.end()) {
@@ -510,6 +510,199 @@ static std::string getDirectoryName(const std::string& path) {
     return path.substr(0, found);
 }
 
+static void loadMaterials(Asset& asset, nlohmann::json& json) {
+    if (json.find("materials") == json.end()) {
+        return;
+    }
+
+    auto& materials = json["materials"];
+    if (!materials.is_array()) {
+        throw MisformattedExceptionNotArray("materials");
+    }
+
+    asset.materials.resize(materials.size());
+    for (uint32_t i = 0; i < materials.size(); ++i) {
+        // name
+        if (materials[i].find("name") != materials[i].end()) {
+            if (!materials[i]["name"].is_string()) {
+                throw MisformattedExceptionNotString("materials[i][name]");
+            }
+
+            asset.materials[i].name = materials[i]["name"];
+        }
+
+        // pbrMetallicRoughness
+        if (materials[i].find("pbrMetallicRoughness") != materials[i].end()) {
+            if (!materials[i]["pbrMetallicRoughness"].is_object()) {
+                throw MisformattedExceptionNotObject("materials[i][pbrMetallicRoughness]");
+            }
+
+            // pbrMetallicRoughness.baseColorFactor
+            if (materials[i]["pbrMetallicRoughness"].find("baseColorFactor") != materials[i]["pbrMetallicRoughness"].end()) {
+                if (!materials[i]["pbrMetallicRoughness"]["baseColorFactor"].is_array()) {
+                    throw MisformattedExceptionNotArray("materials[i][pbrMetallicRoughness][baseColorFactor]");
+                }
+
+                if (materials[i]["pbrMetallicRoughness"]["baseColorFactor"].size() != 4) {
+                    throw MisformattedExceptionNotGoodSizeArray("materials[i][pbrMetallicRoughness][baseColorFactor]");
+                }
+
+                for (uint32_t j = 0; j < 4; ++j) {
+                    if (!materials[i]["pbrMetallicRoughness"]["baseColorFactor"][j].is_number()) {
+                        throw MisformattedExceptionNotNumber("materials[i][pbrMetallicRoughness][baseColorFactor][j]");
+                    }
+
+                    asset.materials[i].pbr.baseColorFactor[j] = materials[i]["pbrMetallicRoughness"]["baseColorFactor"][j].get<float>();
+                }
+            }
+
+            // pbrMetallicRoughness.baseColorTexture
+            if (materials[i]["pbrMetallicRoughness"].find("baseColorTexture") != materials[i]["pbrMetallicRoughness"].end()) {
+                loadTextureInfo(asset.materials[i].pbr.baseColorTexture, materials[i]["pbrMetallicRoughness"]["baseColorTexture"]);
+            }
+
+            // pbrMetallicRoughness.metallicFactor
+            if (materials[i]["pbrMetallicRoughness"].find("metallicFactor") != materials[i]["pbrMetallicRoughness"].end()) {
+                if (!materials[i]["pbrMetallicRoughness"]["metallicFactor"].is_number()) {
+                    throw MisformattedExceptionNotNumber("materials[i][pbrMetallicRoughness][metallicFactor]");
+                }
+
+                asset.materials[i].pbr.metallicFactor = materials[i]["pbrMetallicRoughness"]["metallicFactor"].get<float>();
+            }
+
+            // pbrMetallicRoughness.roughnessFactor
+            if (materials[i]["pbrMetallicRoughness"].find("roughnessFactor") != materials[i]["pbrMetallicRoughness"].end()) {
+                if (!materials[i]["pbrMetallicRoughness"]["roughnessFactor"].is_number()) {
+                    throw MisformattedExceptionNotNumber("materials[i][pbrMetallicRoughness][roughnessFactor]");
+                }
+
+                asset.materials[i].pbr.roughnessFactor = materials[i]["pbrMetallicRoughness"]["roughnessFactor"].get<float>();
+            }
+
+            // pbrMetallicRoughness.metallicRoughnessTexture
+            if (materials[i]["pbrMetallicRoughness"].find("metallicRoughnessTexture") != materials[i]["pbrMetallicRoughness"].end()) {
+                loadTextureInfo(asset.materials[i].pbr.metallicRoughnessTexture, materials[i]["pbrMetallicRoughness"]["metallicRoughnessTexture"]);
+            }
+        }
+
+        // normalTexture
+        if (materials[i].find("normalTexture") != materials[i].end()) {
+            loadTextureInfo(asset.materials[i].normalTexture, materials[i]["normalTexture"]);
+
+            // scale
+            if (materials[i]["normalTexture"].find("scale") != materials[i]["normalTexture"].end()) {
+                if (!materials[i]["normalTexture"]["scale"].is_number()) {
+                    throw MisformattedExceptionNotNumber("materials[i][normalTexture][scale]");
+                }
+            }
+        }
+
+        // occlusionTexture
+        if (materials[i].find("occlusionTexture") != materials[i].end()) {
+            loadTextureInfo(asset.materials[i].occlusionTexture, materials[i]["occlusionTexture"]);
+
+            // scale
+            if (materials[i]["occlusionTexture"].find("strength") != materials[i]["occlusionTexture"].end()) {
+                if (!materials[i]["occlusionTexture"]["strength"].is_number()) {
+                    throw MisformattedExceptionNotNumber("materials[i][occlusionTexture][strength]");
+                }
+            }
+        }
+
+        // emissiveTexture
+        if (materials[i].find("emissiveTexture") != materials[i].end()) {
+            loadTextureInfo(asset.materials[i].emissiveTexture, materials[i]["emissiveTexture"]);
+        }
+
+        // emissiveFactor
+        if (materials[i].find("emissiveFactor") != materials[i].end()) {
+            if (!materials[i]["emissiveFactor"].is_array()) {
+                throw MisformattedExceptionNotArray("materials[i][emissiveFactor]");
+            }
+
+            if (materials[i]["emissiveFactor"].size() != 3) {
+                throw MisformattedExceptionNotGoodSizeArray("materials[i][emissiveFactor]");
+            }
+
+            for (uint32_t j = 0; j < 3; ++j) {
+                if (!materials[i]["emissiveFactor"][j].is_number()) {
+                    throw MisformattedExceptionNotNumber("materials[i][emissiveFactor][j]");
+                }
+
+                asset.materials[i].emissiveFactor[j] = materials[i]["emissiveFactor"][j].get<float>();
+            }
+        }
+
+        // alphaMode
+        if (materials[i].find("alphaMode") != materials[i].end()) {
+            if (!materials[i]["alphaMode"].is_string()) {
+                throw MisformattedExceptionNotString("materials[i][alphaMode]");
+            }
+
+            std::string type = materials[i]["alphaMode"].get<std::string>();
+            if (type == "OPAQUE") {
+                asset.materials[i].alphaMode = Material::AlphaMode::Opaque;
+            } else if (type == "MASK") {
+                asset.materials[i].alphaMode = Material::AlphaMode::Mask;
+            } else if (type == "BLEND") {
+                asset.materials[i].alphaMode = Material::AlphaMode::Blend;
+            } else {
+                throw MisformattedException("materials[i][alphaMode]", "is not a valid string");
+            }
+        }
+
+        // alphaCutoff
+        if (materials[i].find("alphaCutoff") != materials[i].end()) {
+            if (!materials[i]["alphaCutoff"].is_number()) {
+                throw MisformattedExceptionNotNumber("materials[i][alphaCutoff]");
+            }
+
+            asset.materials[i].alphaCutoff = materials[i]["alphaCutoff"].get<float>();
+        }
+
+        // doubleSided
+        if (materials[i].find("doubleSided") != materials[i].end()) {
+            if (!materials[i]["doubleSided"].is_boolean()) {
+                throw MisformattedExceptionNotBoolean("materials[i][doubleSided]");
+            }
+
+            asset.materials[i].doubleSided = materials[i]["doubleSided"].get<bool>();
+        }
+
+        // TODO: materials[i]["extensions"]
+        // TODO: materials[i]["extras"]
+    }
+}
+
+static void loadTextureInfo(Material::Texture& texture, nlohmann::json& json) {
+    if (!json.is_object()) {
+        throw MisformattedExceptionNotNumber("textureInfo");
+    }
+
+    // index
+    if (json.find("index") == json.end()) {
+        throw MisformattedExceptionIsRequired("textureInfo[index]");
+    }
+
+    if (!json["index"].is_number()) {
+        throw MisformattedExceptionNotNumber("textureInfo[index]");
+    }
+
+    texture.index = json["index"].get<int32_t>();
+
+    // texCoord
+    if (json.find("texCoord") != json.end()) {
+        if (!json["texCoord"].is_number()) {
+            throw MisformattedExceptionNotNumber("textureInfo[texCoord]");
+        }
+
+        texture.texCoord = json["texCoord"].get<int32_t>();
+    }
+
+    // TODO: json["extensions"]
+    // TODO: json["extras"]
+}
+
 Asset load(std::string fileName) {
     Asset asset{};
 
@@ -529,6 +722,7 @@ Asset load(std::string fileName) {
     loadBuffers(asset, json);
     loadBufferViews(asset, json);
     loadAccessors(asset, json);
+    loadMaterials(asset, json);
 
     return asset;
 }

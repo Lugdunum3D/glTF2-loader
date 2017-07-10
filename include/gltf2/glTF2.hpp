@@ -82,10 +82,46 @@ struct Sampler {
 };
 
 struct Image {
-};
+};*/
 
 struct Material {
-};*/
+    std::string name;
+
+    struct Texture {
+        uint32_t index{0};
+        uint32_t texCoord{0};
+    };
+
+    struct Pbr {
+        float baseColorFactor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+        Texture baseColorTexture;
+
+        float metallicFactor{1.0f};
+        float roughnessFactor{1.0f};
+        Texture metallicRoughnessTexture;
+    } pbr;
+
+    struct NormalTexture : Texture {
+        float scale{1.0f};
+    } normalTexture;
+
+    struct OcclusionTexture : Texture {
+        float strength{1.0f};
+    } occlusionTexture;
+
+    Texture emissiveTexture;
+
+    float emissiveFactor[3] = {0.0f, 0.0f, 0.0f};
+
+    enum class AlphaMode : uint8_t {
+        Opaque,
+        Mask,
+        Blend
+    } alphaMode{AlphaMode::Opaque};
+
+    float alphaCutoff{0.5f};
+    bool doubleSided{false};
+};
 
 struct Node {
     std::string name;
@@ -158,7 +194,7 @@ struct Asset {
     std::vector<BufferView> bufferViews;
     // std::vector<Camera> cameras;
     // std::vector<Image> images;
-    // std::vector<Material> materials;
+    std::vector<Material> materials;
     std::vector<Mesh> meshes;
     std::vector<Node> nodes;
     // std::vector<Sampler> samplers;

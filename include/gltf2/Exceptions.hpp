@@ -52,6 +52,13 @@ public:
     virtual ~MisformattedExceptionNotArray() throw() {}
 };
 
+class MisformattedExceptionNotGoodSizeArray: public MisformattedException {
+public:
+    explicit MisformattedExceptionNotGoodSizeArray(const char* key) : MisformattedException(key, "is not the good size") {}
+    explicit MisformattedExceptionNotGoodSizeArray(const std::string& key) : MisformattedException(key, "is not the good size") {}
+    virtual ~MisformattedExceptionNotGoodSizeArray() throw() {}
+};
+
 class MisformattedExceptionNotObject: public MisformattedException {
 public:
     explicit MisformattedExceptionNotObject(const char* key) : MisformattedException(key, "is not an array") {}
