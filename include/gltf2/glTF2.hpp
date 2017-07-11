@@ -76,10 +76,36 @@ struct BufferView {
 };
 
 /*struct Texture {
-};
+};*/
 
 struct Sampler {
-};*/
+    std::string name;
+
+    enum class MagFilter : uint16_t {
+        None,
+        Nearest = 9728,
+        Linear = 9729
+    } magFilter{MagFilter::None};
+
+    enum class MinFilter : uint16_t {
+        None,
+        Nearest = 9728,
+        Linear = 9729,
+        NearestMipMapNearest = 9984,
+        LinearMipMapNearest = 9985,
+        NearestMipMapLinear = 9986,
+        LinearMipMapLinear = 9987
+    } minFilter{MinFilter::None};
+
+    enum class WrappingMode : uint16_t {
+        ClampToEdge = 33071,
+        MirroredRepeat = 33648,
+        Repeat = 10497
+    };
+
+    WrappingMode wrapS{WrappingMode::Repeat};
+    WrappingMode wrapT{WrappingMode::Repeat};
+};
 
 struct Image {
     std::string name;
@@ -203,7 +229,7 @@ struct Asset {
     std::vector<Material> materials;
     std::vector<Mesh> meshes;
     std::vector<Node> nodes;
-    // std::vector<Sampler> samplers;
+    std::vector<Sampler> samplers;
     int32_t scene = -1; // Index to the default scene
     std::vector<Scene> scenes;
     // std::vector<Skin> skins;

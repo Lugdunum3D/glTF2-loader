@@ -21,6 +21,7 @@ static std::string pathAppend(const std::string& p1, const std::string& p2);
 static void loadMaterials(Asset& asset, nlohmann::json& json);
 static void loadTextureInfo(Material::Texture& texture, nlohmann::json& json);
 static void loadImages(Asset& asset, nlohmann::json& json);
+static void loadSamplers(Asset& asset, nlohmann::json& json);
 
 static void loadAsset(Asset& asset, nlohmann::json& json) {
     if (json.find("asset") == json.end()) {
@@ -764,6 +765,68 @@ static void loadImages(Asset& asset, nlohmann::json& json) {
     }
 }
 
+static void loadSamplers(Asset& asset, nlohmann::json& json) {
+    if (json.find("samplers") == json.end()) {
+        return;
+    }
+
+    auto& samplers = json["samplers"];
+    if (!samplers.is_array()) {
+        throw MisformattedExceptionNotArray("samplers");
+    }
+
+    asset.samplers.resize(samplers.size());
+    for (uint32_t i = 0; i < samplers.size(); ++i) {
+        // name
+        if (samplers[i].find("name") != samplers[i].end()) {
+            if (!samplers[i]["name"].is_string()) {
+                throw MisformattedExceptionNotString("samplers[i][name]");
+            }
+
+            asset.samplers[i].name = samplers[i]["name"];
+        }
+
+        // magFilter
+        if (samplers[i].find("magFilter") != samplers[i].end()) {
+            if (!samplers[i]["magFilter"].is_number()) {
+                throw MisformattedExceptionNotNumber("samplers[i][magFilter]");
+            }
+
+            asset.samplers[i].magFilter = static_cast<Sampler::MagFilter>(samplers[i]["magFilter"].get<uint16_t>());
+        }
+
+        // minFilter
+        if (samplers[i].find("minFilter") != samplers[i].end()) {
+            if (!samplers[i]["minFilter"].is_number()) {
+                throw MisformattedExceptionNotNumber("samplers[i][minFilter]");
+            }
+
+            asset.samplers[i].minFilter = static_cast<Sampler::MinFilter>(samplers[i]["minFilter"].get<uint16_t>());
+        }
+
+        // wrapS
+        if (samplers[i].find("wrapS") != samplers[i].end()) {
+            if (!samplers[i]["wrapS"].is_number()) {
+                throw MisformattedExceptionNotNumber("samplers[i][wrapS]");
+            }
+
+            asset.samplers[i].wrapS = static_cast<Sampler::WrappingMode>(samplers[i]["wrapS"].get<uint16_t>());
+        }
+
+        // wrapT
+        if (samplers[i].find("wrapT") != samplers[i].end()) {
+            if (!samplers[i]["wrapT"].is_number()) {
+                throw MisformattedExceptionNotNumber("samplers[i][wrapT]");
+            }
+
+            asset.samplers[i].wrapT = static_cast<Sampler::WrappingMode>(samplers[i]["wrapT"].get<uint16_t>());
+        }
+
+        // TODO: samplers[i]["extensions"]
+        // TODO: samplers[i]["extras"]
+    }
+}
+
 Asset load(std::string fileName) {
     Asset asset{};
 
@@ -785,6 +848,7 @@ Asset load(std::string fileName) {
     loadAccessors(asset, json);
     loadMaterials(asset, json);
     loadImages(asset, json);
+    loadSamplers(asset, json);
 
     return asset;
 }
