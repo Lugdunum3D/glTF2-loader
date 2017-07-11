@@ -75,8 +75,12 @@ struct BufferView {
     // extensions / extras
 };
 
-/*struct Texture {
-};*/
+struct Texture {
+    std::string name;
+
+    int32_t sampler{-1};
+    int32_t source{-1};
+};
 
 struct Sampler {
     std::string name;
@@ -120,7 +124,7 @@ struct Material {
     std::string name;
 
     struct Texture {
-        uint32_t index{0};
+        int32_t index{-1};
         uint32_t texCoord{0};
     };
 
@@ -233,7 +237,7 @@ struct Asset {
     int32_t scene = -1; // Index to the default scene
     std::vector<Scene> scenes;
     // std::vector<Skin> skins;
-    // std::vector<Texture> textures;
+    std::vector<Texture> textures;
 
     // extensions / extras
 

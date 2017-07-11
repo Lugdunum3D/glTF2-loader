@@ -22,6 +22,7 @@ static void loadMaterials(Asset& asset, nlohmann::json& json);
 static void loadTextureInfo(Material::Texture& texture, nlohmann::json& json);
 static void loadImages(Asset& asset, nlohmann::json& json);
 static void loadSamplers(Asset& asset, nlohmann::json& json);
+static void loadTextures(Asset& asset, nlohmann::json& json);
 
 static void loadAsset(Asset& asset, nlohmann::json& json) {
     if (json.find("asset") == json.end()) {
@@ -827,6 +828,50 @@ static void loadSamplers(Asset& asset, nlohmann::json& json) {
     }
 }
 
+static void loadTextures(Asset& asset, nlohmann::json& json) {
+    if (json.find("textures") == json.end()) {
+        return;
+    }
+
+    auto& textures = json["textures"];
+    if (!textures.is_array()) {
+        throw MisformattedExceptionNotArray("textures");
+    }
+
+    asset.textures.resize(textures.size());
+    for (uint32_t i = 0; i < textures.size(); ++i) {
+        // name
+        if (textures[i].find("name") != textures[i].end()) {
+            if (!textures[i]["name"].is_string()) {
+                throw MisformattedExceptionNotString("textures[i][name]");
+            }
+
+            asset.textures[i].name = textures[i]["name"];
+        }
+
+        // sampler
+        if (textures[i].find("sampler") != textures[i].end()) {
+            if (!textures[i]["sampler"].is_number()) {
+                throw MisformattedExceptionNotNumber("textures[i][sampler]");
+            }
+
+            asset.textures[i].sampler = textures[i]["sampler"].get<int32_t>();
+        }
+
+        // source
+        if (textures[i].find("source") != textures[i].end()) {
+            if (!textures[i]["source"].is_number()) {
+                throw MisformattedExceptionNotNumber("textures[i][source]");
+            }
+
+            asset.textures[i].source = textures[i]["source"].get<int32_t>();
+        }
+
+        // TODO: textures[i]["extensions"]
+        // TODO: textures[i]["extras"]
+    }
+}
+
 Asset load(std::string fileName) {
     Asset asset{};
 
@@ -849,6 +894,7 @@ Asset load(std::string fileName) {
     loadMaterials(asset, json);
     loadImages(asset, json);
     loadSamplers(asset, json);
+    loadTextures(asset, json);
 
     return asset;
 }
