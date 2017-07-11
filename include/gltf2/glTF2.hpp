@@ -79,10 +79,16 @@ struct BufferView {
 };
 
 struct Sampler {
-};
+};*/
 
 struct Image {
-};*/
+    std::string name;
+
+    std::string uri;
+
+    std::string mimeType;
+    int32_t bufferView{-1};
+};
 
 struct Material {
     std::string name;
@@ -193,7 +199,7 @@ struct Asset {
     std::vector<Buffer> buffers;
     std::vector<BufferView> bufferViews;
     // std::vector<Camera> cameras;
-    // std::vector<Image> images;
+    std::vector<Image> images;
     std::vector<Material> materials;
     std::vector<Mesh> meshes;
     std::vector<Node> nodes;

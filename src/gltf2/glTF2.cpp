@@ -20,6 +20,7 @@ static void loadBufferData(Asset& asset, Buffer& buffer);
 static std::string pathAppend(const std::string& p1, const std::string& p2);
 static void loadMaterials(Asset& asset, nlohmann::json& json);
 static void loadTextureInfo(Material::Texture& texture, nlohmann::json& json);
+static void loadImages(Asset& asset, nlohmann::json& json);
 
 static void loadAsset(Asset& asset, nlohmann::json& json) {
     if (json.find("asset") == json.end()) {
@@ -295,6 +296,10 @@ static void loadBuffers(Asset& asset, nlohmann::json& json) {
 
         // uri
         if (buffers[i].find("uri") != buffers[i].end()) {
+            if (!buffers[i]["uri"].is_string()) {
+                throw MisformattedExceptionNotString("buffers[i][uri]");
+            }
+
             asset.buffers[i].uri = buffers[i]["uri"];
         }
 
@@ -703,6 +708,62 @@ static void loadTextureInfo(Material::Texture& texture, nlohmann::json& json) {
     // TODO: json["extras"]
 }
 
+static void loadImages(Asset& asset, nlohmann::json& json) {
+    if (json.find("images") == json.end()) {
+        return;
+    }
+
+    auto& images = json["images"];
+    if (!images.is_array()) {
+        throw MisformattedExceptionNotArray("images");
+    }
+
+    asset.images.resize(images.size());
+    for (uint32_t i = 0; i < images.size(); ++i) {
+        // name
+        if (images[i].find("name") != images[i].end()) {
+            if (!images[i]["name"].is_string()) {
+                throw MisformattedExceptionNotString("images[i][name]");
+            }
+
+            asset.images[i].name = images[i]["name"];
+        }
+
+        // uri
+        // TODO: load base64 uri
+        if (images[i].find("uri") != images[i].end()) {
+            if (!images[i]["uri"].is_string()) {
+                throw MisformattedExceptionNotString("images[i][uri]");
+            }
+
+            asset.images[i].uri = pathAppend(asset.dirName, images[i]["uri"]);
+        }
+
+        // mimeType
+        if (images[i].find("mimeType") != images[i].end()) {
+            if (!images[i]["mimeType"].is_string()) {
+                throw MisformattedExceptionNotString("images[i][mimeType]");
+            }
+
+            asset.images[i].mimeType = images[i]["mimeType"];
+        }
+
+        // bufferView
+        if (images[i].find("bufferView") != images[i].end()) {
+            if (!images[i]["bufferView"].is_number()) {
+                throw MisformattedExceptionNotNumber("images[i][bufferView]");
+            }
+
+            asset.images[i].bufferView = images[i]["bufferView"].get<int32_t>();
+        }
+
+        // TODO: Handle dependencies between mimeType and bufferView
+        // TODO: Handle the fact that we want an uri OR a bufferView
+        // TODO: images[i]["extensions"]
+        // TODO: images[i]["extras"]
+    }
+}
+
 Asset load(std::string fileName) {
     Asset asset{};
 
@@ -723,6 +784,7 @@ Asset load(std::string fileName) {
     loadBufferViews(asset, json);
     loadAccessors(asset, json);
     loadMaterials(asset, json);
+    loadImages(asset, json);
 
     return asset;
 }
