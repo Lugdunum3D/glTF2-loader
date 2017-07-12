@@ -930,6 +930,11 @@ Asset load(std::string fileName) {
     Asset asset{};
 
     std::ifstream file(fileName);
+
+    if (!file.is_open()) {
+        throw std::runtime_error("Can't load file");
+    }
+
     asset.dirName = getDirectoryName(fileName);
 
     // TODO: Check the extension (.gltf / .glb)
