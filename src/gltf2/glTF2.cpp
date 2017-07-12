@@ -260,9 +260,63 @@ static void loadNodes(Asset& asset, nlohmann::json& json) {
             asset.nodes[i].mesh = nodes[i]["mesh"].get<int32_t>();
         }
 
-        // TODO: nodes[i]["rotation"]
-        // TODO: nodes[i]["scale"]
-        // TODO: nodes[i]["translation"]
+        // translation
+        if (nodes[i].find("translation") != nodes[i].end()) {
+            if (!nodes[i]["translation"].is_array()) {
+                throw MisformattedExceptionNotArray("nodes[i][translation]");
+            }
+
+            if (nodes[i]["translation"].size() != 3) {
+                throw MisformattedExceptionNotGoodSizeArray("nodes[i][translation]");
+            }
+
+            for (uint32_t j = 0; j < 3; ++j) {
+                if (!nodes[i]["translation"][j].is_number()) {
+                    throw MisformattedExceptionNotNumber("nodes[i][translation][j]");
+                }
+
+                asset.nodes[i].translation[j] = nodes[i]["translation"][j].get<float>();
+            }
+        }
+
+        // rotation
+        if (nodes[i].find("rotation") != nodes[i].end()) {
+            if (!nodes[i]["rotation"].is_array()) {
+                throw MisformattedExceptionNotArray("nodes[i][rotation]");
+            }
+
+            if (nodes[i]["rotation"].size() != 4) {
+                throw MisformattedExceptionNotGoodSizeArray("nodes[i][rotation]");
+            }
+
+            for (uint32_t j = 0; j < 4; ++j) {
+                if (!nodes[i]["rotation"][j].is_number()) {
+                    throw MisformattedExceptionNotNumber("nodes[i][rotation][j]");
+                }
+
+                asset.nodes[i].rotation[j] = nodes[i]["rotation"][j].get<float>();
+            }
+        }
+
+        // scale
+        if (nodes[i].find("scale") != nodes[i].end()) {
+            if (!nodes[i]["scale"].is_array()) {
+                throw MisformattedExceptionNotArray("nodes[i][scale]");
+            }
+
+            if (nodes[i]["scale"].size() != 3) {
+                throw MisformattedExceptionNotGoodSizeArray("nodes[i][scale]");
+            }
+
+            for (uint32_t j = 0; j < 3; ++j) {
+                if (!nodes[i]["scale"][j].is_number()) {
+                    throw MisformattedExceptionNotNumber("nodes[i][scale][j]");
+                }
+
+                asset.nodes[i].scale[j] = nodes[i]["scale"][j].get<float>();
+            }
+        }
+
         // TODO: nodes[i]["weights"]
     }
 }
