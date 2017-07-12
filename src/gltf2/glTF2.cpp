@@ -9,6 +9,10 @@
 
 namespace gltf2 {
 
+#if defined(__ANDROID__)
+AAssetManager* _assetManager = nullptr;
+#endif
+
 static void loadAsset(Asset& asset, nlohmann::json& json);
 static void loadScenes(Asset& asset, nlohmann::json& json);
 static void loadMeshes(Asset& asset, nlohmann::json& json);
@@ -539,6 +543,17 @@ static void loadBufferData(Asset& asset, Buffer& buffer) {
     }
 
     buffer.data = new char[buffer.byteLength];
+
+#if defined(__ANDROID__)
+    AAsset* assetAndroid = AAssetManager_open(_assetManager, pathAppend(asset.dirName, buffer.uri).c_str(), AASSET_MODE_STREAMING);
+
+    if (!assetAndroid) {
+        throw std::runtime_error("Can't open Android asset");
+    }
+
+    AAsset_read(assetAndroid, reinterpret_cast<char*>(buffer.data), buffer.byteLength);
+    AAsset_close(assetAndroid);
+#else
     // TODO: load base64 uri
     std::ifstream fileData(pathAppend(asset.dirName, buffer.uri), std::ios::binary);
     if (!fileData.good()) {
@@ -546,6 +561,7 @@ static void loadBufferData(Asset& asset, Buffer& buffer) {
     }
     fileData.read(buffer.data, buffer.byteLength);
     fileData.close();
+#endif
 }
 
 static std::string pathAppend(const std::string& p1, const std::string& p2) {
@@ -926,22 +942,53 @@ static void loadTextures(Asset& asset, nlohmann::json& json) {
     }
 }
 
-Asset load(std::string fileName) {
-    Asset asset{};
+#if defined(__ANDROID__)
+Asset load(std::string fileName, AAssetManager* assetManager) {
+    _assetManager = assetManager;
 
-    std::ifstream file(fileName);
+    nlohmann::json json;
 
-    if (!file.is_open()) {
-        throw std::runtime_error("Can't load file");
+    {
+        AAsset* asset = AAssetManager_open(assetManager, fileName.c_str(), AASSET_MODE_STREAMING);
+
+        if (!asset) {
+            throw std::runtime_error("Can't open Android asset");
+        }
+
+        uint32_t size = AAsset_getLength(asset);
+
+        if (size <= 0) {
+            throw std::runtime_error("Android asset is empty");
+        }
+
+        std::string content;
+        content.resize(size);
+
+        AAsset_read(asset, reinterpret_cast<char*>(&content[0]), size);
+        AAsset_close(asset);
+
+        json = nlohmann::json::parse(content);
     }
-
-    asset.dirName = getDirectoryName(fileName);
-
+#else
+Asset load(std::string fileName) {
     // TODO: Check the extension (.gltf / .glb)
 
     nlohmann::json json;
 
-    file >> json;
+    {
+        std::ifstream file(fileName);
+
+        if (!file.is_open()) {
+            throw std::runtime_error("Can't load file");
+        }
+
+        file >> json;
+    }
+#endif
+
+    Asset asset{};
+
+    asset.dirName = getDirectoryName(fileName);
 
     loadAsset(asset, json);
     loadScenes(asset, json);

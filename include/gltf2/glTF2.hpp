@@ -4,7 +4,15 @@
 #include <unordered_map>
 #include <vector>
 
+#if defined(__ANDROID__)
+    #include <android/asset_manager.h>
+#endif
+
 namespace gltf2 {
+
+#if defined(__ANDROID__)
+extern AAssetManager* _assetManager;
+#endif
 
 using Attributes = std::unordered_map<std::string, uint32_t>;
 
@@ -246,6 +254,9 @@ struct Asset {
     Scene* getDefaultScene() const;
 };
 
+#if defined(__ANDROID__)
+Asset load(std::string fileName, AAssetManager* assetManager);
+#else
 /**
  * @brief      Load a glTF v2.0 asset from a file
  *
@@ -254,4 +265,5 @@ struct Asset {
  * @return     The asset
  */
 Asset load(std::string fileName);
+#endif
 } // gltf2
