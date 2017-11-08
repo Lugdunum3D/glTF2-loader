@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-macro(lug_set_option var default type docstring)
+macro(set_option var default type docstring)
     if(NOT DEFINED ${var})
         set(${var} ${default})
     endif()
@@ -13,7 +13,7 @@ if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
 endif()
 
 # determine the build type
-lug_set_option(CMAKE_BUILD_TYPE Release STRING "Choose the type of build (Debug or Release)")
+set_option(CMAKE_BUILD_TYPE Release STRING "Choose the type of build (Debug or Release)")
 
 # set android options
 if(ANDROID)
@@ -23,13 +23,13 @@ if(ANDROID)
     set(ANDROID_TOOLCHAIN clang)
     message(STATUS "ANDROID_TOOLCHAIN: ${ANDROID_TOOLCHAIN}")
 
-    lug_set_option(ANDROID_PLATFORM android-24 STRING "Target specific android version target (default: android-24)")
+    set_option(ANDROID_PLATFORM android-24 STRING "Target specific android version target (default: android-24)")
     if(NOT ANDROID_PLATFORM MATCHES android-2[4-9])
         message(FATAL_ERROR "Invalid android version target: ${ANDROID_PLATFORM}")
     endif()
     message(STATUS "ANDROID_PLATFORM: ${ANDROID_PLATFORM}")
 
-    lug_set_option(ANDROID_STL c++_shared STRING "Choose which Android STL to use (default: c++_shared)")
+    set_option(ANDROID_STL c++_shared STRING "Choose which Android STL to use (default: c++_shared)")
 
     if(NOT ANDROID_STL STREQUAL c++_static AND NOT ANDROID_STL STREQUAL c++_shared)
         message(FATAL_ERROR "Invalid STL: ${ANDROID_STL}")
@@ -96,8 +96,13 @@ if (MSVC)
     target_compile_options(${target} PUBLIC /MP)
 endif()
 
+# use gcc's libstdc++ because it has the modern namespaced ABI for std containers
+if(CMAKE_CXX_COMPILER MATCHES ".*clang[+][+]" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang++")
+    target_compile_options(${target} PUBLIC "-stdlib=libstdc++")
+endif()
+
 # unit tests
-lug_set_option(BUILD_TESTS FALSE BOOL "TRUE to enable unit tests, FALSE to disable unit tests")
+set_option(BUILD_TESTS FALSE BOOL "TRUE to enable unit tests, FALSE to disable unit tests")
 if(BUILD_TESTS)
     # Note: enable_testing() MUST be on the top level CMakeLists.txt
     enable_testing()
