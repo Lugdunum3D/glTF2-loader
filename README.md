@@ -1,3 +1,9 @@
+# :scroll: Unmaintained :scroll:
+
+If you are interested to take over this repository, please open an issue!
+
+---
+
 ![](./doc/gltf2-loader.png)
 
 
